@@ -670,7 +670,7 @@
          "name":"Collisions",
          "opacity":0.3,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":70,
          "x":0,
          "y":0
@@ -721,7 +721,7 @@
          "name":"Battle Zones",
          "opacity":0.5,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":70,
          "x":0,
          "y":0
@@ -786,11 +786,11 @@
  "tilesets":[
         {
          "firstgid":1,
-         "source":"Chris Courses - Pokemon\/Tiled\/pokemonStyleGameTileset.tsx"
+         "source":"ChrisCoursesPokemon\/Tiled\/pokemonStyleGameTileset.tsx"
         }, 
         {
          "firstgid":1025,
-         "source":"Chris Courses - Pokemon\/Tiled\/collisionTileset.tsx"
+         "source":"ChrisCoursesPokemon\/Tiled\/collisionTileset.tsx"
         }],
  "tilewidth":12,
  "type":"map",

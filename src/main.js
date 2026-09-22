@@ -29,7 +29,7 @@ playerImages.down.src = playerDown
 playerImages.left.src = playerLeft
 playerImages.right.src = playerRight
 
-let currentPlayerImage = playerImages.d
+let currentPlayerImage = playerImages.down
 
 let imagesLoaded = 0;
 const totalImages = 5; // background + 4 directions

@@ -5,6 +5,7 @@ import playerDown from './assets/chrisCourseAssets/ChrisCoursesPokemon/Images/pl
 import playerUp from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/playerUp.png"
 import playerLeft from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/playerLeft.png"
 import playerRight from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/playerRight.png"
+import foreGroundObject from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Tiled/foreground object.png"
 
 import { Sprite } from './sprite';
 import { Boundary } from './boundary'
@@ -46,6 +47,8 @@ collisionArray.forEach((row, i) => {
 })
 
 const image = new Image();
+const foreGroundImage = new Image();
+foreGroundImage.src=foreGroundObject
 image.src = petTownUrl;
 
 const playerImages = {
@@ -68,12 +71,18 @@ const background = new Sprite({
     context: c,
 })
 
+const foreground = new Sprite({
+    position: { x: offset.x, y: offset.y },
+    image: foreGroundImage,
+    context: c,
+})
+
 const player = new Player({
     context: c,
     images: playerImages,
 })
 
-const movables = [background, ...boundaries]
+const movables = [background, ...boundaries,foreground]
 
 function tryDraw() {
     imagesLoaded++;
@@ -157,11 +166,12 @@ function animate() {
     c.fillRect(0, 0, canvas.width, canvas.height);
 
     background.draw()
-    // boundaries.forEach(boundary => {
+    // boundaries.forEach(bundary => {
     //     boundary.draw()
     // })
     
     player.draw(canvas)
+    foreground.draw(canvas)
 }
 
 window.addEventListener("keydown", e => {

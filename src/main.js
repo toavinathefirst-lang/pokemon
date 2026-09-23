@@ -133,6 +133,8 @@ function animate() {
     } else if (keys.d.pressed) {
         dx = -speed
         direction = 'right'
+    }else{
+        player.moving=false
     }
     if (direction) {
         player.setDirection(direction)

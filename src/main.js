@@ -1,4 +1,3 @@
-//mienne
 import './style.css'
 import petTownUrl from './assets/chrisCourseAssets/ChrisCoursesPokemon/Tiled/Pellet TownZoom.png'
 import playerDown from './assets/chrisCourseAssets/ChrisCoursesPokemon/Images/playerDown.png'
@@ -12,6 +11,7 @@ import { Boundary } from './boundary'
 import { Player } from './player'
 
 import { collisionMap } from './data/collisions'
+import { battleZoneArray } from './data/battleZone'
 
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext('2d')
@@ -23,13 +23,17 @@ const collisionArray = []
 for (let i = 0; i < collisionMap.length; i += 70) {
     collisionArray.push(collisionMap.slice(i, 70 + i))
 }
+const battleZoneMap = []
+for (let i = 0; i < battleZoneArray.length; i += 70) {
+    battleZoneMap.push(battleZoneArray.slice(i, 70 + i))
+}
 
 const offset = {
     x: -735, y: -620
 }
 
 /**
- * @type {Boundary[]} 
+ * @type {Boundary[]}
  */
 const boundaries = []
 collisionArray.forEach((row, i) => {
@@ -46,9 +50,28 @@ collisionArray.forEach((row, i) => {
     })
 })
 
+/**
+ * @type {Boundary[]}
+ */
+const battleZone = []
+
+battleZoneMap.forEach((row, i) => {
+    row.forEach((symbol, j) => {
+        if (symbol == 1025) {
+            battleZone.push(new Boundary({
+                context: c,
+                position: {
+                    x: j * Boundary.width + offset.x,
+                    y: i * Boundary.height + offset.y
+                }
+            }))
+        }
+    })
+})
+
 const image = new Image();
 const foreGroundImage = new Image();
-foreGroundImage.src=foreGroundObject
+foreGroundImage.src = foreGroundObject
 image.src = petTownUrl;
 
 const playerImages = {
@@ -63,7 +86,7 @@ playerImages.left.src = playerLeft
 playerImages.right.src = playerRight
 
 let imagesLoaded = 0;
-const totalImages = 5; // background + 4 directions
+const totalImages = 6; // background + foreground + 4 directions
 
 const background = new Sprite({
     position: { x: offset.x, y: offset.y },
@@ -82,7 +105,8 @@ const player = new Player({
     images: playerImages,
 })
 
-const movables = [background, ...boundaries,foreground]
+
+const movables = [background, ...boundaries, foreground, ...battleZone]
 
 function tryDraw() {
     imagesLoaded++;
@@ -91,12 +115,18 @@ function tryDraw() {
     }
 }
 
+const onError = (e) => console.error("Erreur de chargement de l'image :", e);
+
 image.onload = tryDraw;
-image.onerror = (e) => console.error("Erreur de chargement de l'image :", e);
+image.onerror = onError;
+
+
+foreGroundImage.onload = tryDraw;
+foreGroundImage.onerror = onError;
 
 Object.values(playerImages).forEach(img => {
     img.onload = tryDraw;
-    img.onerror = (e) => console.error("Erreur de chargement de l'image :", e);
+    img.onerror = onError;
 })
 
 const keys = {
@@ -105,6 +135,7 @@ const keys = {
     s: { pressed: false },
     d: { pressed: false }
 }
+
 function rectangularCollision({ rect1, rect2 }) {
     return (
         rect1.position.x < rect2.position.x + rect2.width &&
@@ -119,8 +150,8 @@ function animate() {
     const speed = 3
     let dx = 0, dy = 0
     let direction = null
-    // 1. mettre à jour la direction/position AVANT de dessiner
-    // 1. déterminer le déplacement prévu ET la direction, SANS encore bouger
+
+    
     if (keys.z.pressed) {
         dy = speed
         direction = 'up'
@@ -133,15 +164,16 @@ function animate() {
     } else if (keys.d.pressed) {
         dx = -speed
         direction = 'right'
-    }else{
-        player.moving=false
+    } else {
+        player.moving = false
     }
+
     if (direction) {
         player.setDirection(direction)
 
         const playerBox = player.getBox(canvas)
 
-        // 2. vérifier si CE déplacement causerait une collision
+        
         const willCollide = boundaries.some(boundary => {
             return rectangularCollision({
                 rect1: playerBox,
@@ -155,6 +187,31 @@ function animate() {
                 }
             })
         })
+       const isInBattleZone = battleZone.some(boundary => {
+            const overlappingArea =
+                (Math.min(
+                    playerBox.position.x + playerBox.width,
+                    boundary.position.x + boundary.width
+                ) -
+                    Math.max(playerBox.position.x, boundary.position.x)) *
+                (Math.min(
+                    playerBox.position.y + playerBox.height,
+                    boundary.position.y + boundary.height
+                ) -
+                    Math.max(playerBox.position.y, boundary.position.y))
+
+            return rectangularCollision({
+                rect1: playerBox,
+                rect2: {
+                    position: {
+                        x: boundary.position.x + dx,
+                        y: boundary.position.y + dy
+                    },
+                    width: boundary.width,
+                    height: boundary.height
+                }
+            }) && overlappingArea > (playerBox.width * playerBox.height) / 2  && Math.random() < 0.03
+        })
 
         // 3. ne bouger que si c'est libre
         if (!willCollide) {
@@ -163,21 +220,31 @@ function animate() {
                 movable.position.y += dy
             })
         }
+        if(isInBattleZone){
+            console.log("battle Activated");
+            
+        }
     }
+
     c.fillStyle = "white";
     c.fillRect(0, 0, canvas.width, canvas.height);
 
     background.draw()
-    // boundaries.forEach(bundary => {
+    // boundaries.forEach(boundary => {
     //     boundary.draw()
     // })
-    
+
+   
+    battleZone.forEach(boundary => {
+        boundary.draw()
+    })
     player.draw(canvas)
-    foreground.draw(canvas)
+    foreground.draw()
 }
 
+
 window.addEventListener("keydown", e => {
-    switch (e.key) {
+    switch (e.key.toLowerCase()) {
         case "z":
             keys.z.pressed = true
             break;
@@ -193,7 +260,7 @@ window.addEventListener("keydown", e => {
     }
 })
 window.addEventListener("keyup", e => {
-    switch (e.key) {
+    switch (e.key.toLowerCase()) {
         case "z":
             keys.z.pressed = false
             break;

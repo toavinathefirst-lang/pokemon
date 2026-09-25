@@ -8,6 +8,10 @@ import playerLeft from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/pl
 import playerRight from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/playerRight.png"
 import foreGroundObject from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Tiled/foreground object.png"
 import backGroundBattleImage from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/battleBackground.png"
+import draggleImageSrc from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/draggleSprite.png"
+import firePokemonSrc from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/embySprite.png"
+import fireBallSrc from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/fireball.png"
+
 
 import { Sprite } from './sprite';
 import { Boundary } from './boundary'
@@ -161,9 +165,29 @@ const backGroundBattle= new Sprite({
     },
     image:battleBackgroundImage
 })
+const draggleImage=new Image()
+draggleImage.src = draggleImageSrc
+const draggle = new Sprite({
+    context: c,
+    position: { x: 280, y: 325 },
+    image: draggleImage,
+    frames: { max: 4, hold: 30 },
+    animate: true
+})
+const emberImage=new Image()
+emberImage.src=firePokemonSrc
+const ember = new Sprite({
+    context: c,
+    position: { x: 800, y: 100 },
+    image: emberImage,
+    frames: { max: 4, hold: 30 },
+    animate: true
+})
 function animateBattle(){
     window.requestAnimationFrame(animateBattle)
     backGroundBattle.draw(canvas)
+    draggle.draw(canvas)
+    ember.draw(canvas)
     // console.log("animating battle");
     
 }

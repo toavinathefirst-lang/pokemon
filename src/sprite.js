@@ -1,4 +1,3 @@
-//voici ce que j ai fais 
 export class Sprite{
     /**
      *
@@ -30,12 +29,17 @@ export class Sprite{
         this.image=image
         this.frame=frames
         this.frames = { ...frames, val: 0, elapsed: 0 }
-        
-        this.image.onload =()=>{
+
+        const setDimensions = () => {
             this.width=(this.image.width / this.frames.max)*scale
             this.height=this.image.height * scale
         }
-          this.image.src = image.src
+
+        if (this.image.complete && this.image.naturalWidth !== 0) {
+            setDimensions()
+        } else {
+            this.image.addEventListener('load', setDimensions)
+        }
 
         // this.animate = animate
         // this.sprites = sprites

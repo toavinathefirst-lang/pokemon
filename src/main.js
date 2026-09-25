@@ -7,6 +7,7 @@ import playerUp from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/play
 import playerLeft from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/playerLeft.png"
 import playerRight from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/playerRight.png"
 import foreGroundObject from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Tiled/foreground object.png"
+import backGroundBattleImage from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/battleBackground.png"
 
 import { Sprite } from './sprite';
 import { Boundary } from './boundary'
@@ -150,9 +151,19 @@ function rectangularCollision({ rect1, rect2 }) {
 const battle={
     initiated:false
 }
+const battleBackgroundImage = new Image()
+battleBackgroundImage.src=backGroundBattleImage;
+
+const backGroundBattle= new Sprite({
+    context:c,
+    position:{
+        x:0,y:0
+    },
+    image:battleBackgroundImage
+})
 function animateBattle(){
     window.requestAnimationFrame(animateBattle)
-    
+    backGroundBattle.draw(canvas)
     // console.log("animating battle");
     
 }
@@ -246,10 +257,18 @@ function animate() {
                 onComplete(){
                     gsap.to("#overlappingDiv",{
                         opacity:1,
-                        duration:.4
+                        duration:.4,
+                        onComplete(){
+                            gsap.to("#overlappingDiv",{
+                                opacity:0,
+                                duration:.4
+                            })
+                            //activate a new animation loop
+                            animateBattle()
+                            
+                        }
                     })
-                    //activate a new animation loop
-                   animateBattle()
+                    
                    
                 }
             }) 
@@ -266,9 +285,9 @@ function animate() {
     // })
 
    
-    battleZone.forEach(boundary => {
-        boundary.draw()
-    })
+    // battleZone.forEach(boundary => {
+    //     boundary.draw()
+    // })
     player.draw(canvas)
     foreground.draw()
 }

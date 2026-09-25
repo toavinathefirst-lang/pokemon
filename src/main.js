@@ -1,4 +1,6 @@
 import './style.css'
+import gsap from 'gsap'
+
 import petTownUrl from './assets/chrisCourseAssets/ChrisCoursesPokemon/Tiled/Pellet TownZoom.png'
 import playerDown from './assets/chrisCourseAssets/ChrisCoursesPokemon/Images/playerDown.png'
 import playerUp from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/playerUp.png"
@@ -15,6 +17,7 @@ import { battleZoneArray } from './data/battleZone'
 
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext('2d')
+
 
 canvas.width = 1024
 canvas.height = 576
@@ -144,9 +147,18 @@ function rectangularCollision({ rect1, rect2 }) {
         rect1.position.y + rect1.height > rect2.position.y
     )
 }
-
+const battle={
+    initiated:false
+}
+function animateBattle(){
+    window.requestAnimationFrame(animateBattle)
+    
+    // console.log("animating battle");
+    
+}
 function animate() {
-    window.requestAnimationFrame(animate)
+    
+   const  animationId = window.requestAnimationFrame(animate)
     const speed = 3
     let dx = 0, dy = 0
     let direction = null
@@ -167,7 +179,8 @@ function animate() {
     } else {
         player.moving = false
     }
-
+    player.moving=false;
+    if (battle.initiated) return true
     if (direction) {
         player.setDirection(direction)
 
@@ -222,7 +235,25 @@ function animate() {
         }
         if(isInBattleZone){
             console.log("battle Activated");
-            
+             //deactivate current animation loop
+            window.cancelAnimationFrame(animationId)
+            battle.initiated=true
+            gsap.to('#overlappingDiv',{
+                opacity:0.95,
+                repeat:3,
+                yoyo:true,
+                duration:.4,
+                onComplete(){
+                    gsap.to("#overlappingDiv",{
+                        opacity:1,
+                        duration:.4
+                    })
+                    //activate a new animation loop
+                   animateBattle()
+                   
+                }
+            }) 
+              
         }
     }
 

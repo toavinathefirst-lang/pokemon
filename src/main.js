@@ -169,7 +169,7 @@ const draggleImage=new Image()
 draggleImage.src = draggleImageSrc
 const draggle = new Sprite({
     context: c,
-    position: { x: 280, y: 325 },
+    position: { x: 800, y: 100 },
     image: draggleImage,
     frames: { max: 4, hold: 30 },
     animate: true
@@ -178,7 +178,7 @@ const emberImage=new Image()
 emberImage.src=firePokemonSrc
 const ember = new Sprite({
     context: c,
-    position: { x: 800, y: 100 },
+    position: { x: 280, y: 325 },
     image: emberImage,
     frames: { max: 4, hold: 30 },
     animate: true
@@ -189,6 +189,8 @@ function animateBattle(){
     draggle.draw(canvas)
     ember.draw(canvas)
     // console.log("animating battle");
+    const userInterfaceElement = document.querySelector("#userInterface")
+    userInterfaceElement.style="display:block"
     
 }
 function animate() {

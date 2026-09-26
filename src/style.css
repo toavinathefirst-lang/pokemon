@@ -23,6 +23,7 @@ button {
   border: 0;
   cursor: pointer;
   font-size: 16px;
+  border-radius: 15px;
 }
 
 button:hover {
@@ -127,7 +128,11 @@ button:hover {
   width: 66.66%;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  border-radius: 10px;
+  
 }
+
+
 
 .attack-type-box {
   display: flex;

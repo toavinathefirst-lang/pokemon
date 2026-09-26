@@ -12,7 +12,7 @@ import draggleImageSrc from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Imag
 import firePokemonSrc from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/embySprite.png"
 import fireBallSrc from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/fireball.png"
 
-
+import { Monster } from './monster'
 import { Sprite } from './sprite';
 import { Boundary } from './boundary'
 import { Player } from './player'
@@ -165,23 +165,62 @@ const backGroundBattle= new Sprite({
     },
     image:battleBackgroundImage
 })
+function updateHealthBar(selector, health) {
+    gsap.to(selector, {
+        width: Math.max(health, 0) + '%'
+    })
+}
 const draggleImage=new Image()
 draggleImage.src = draggleImageSrc
-const draggle = new Sprite({
+const draggle = new Monster({
     context: c,
     position: { x: 800, y: 100 },
     image: draggleImage,
     frames: { max: 4, hold: 30 },
-    animate: true
+    animate: true,
+    name:"draggle",
+    isEnemy:true,
+    onHealthChange: (health) => updateHealthBar('#enemyHealthBar', health)
 })
 const emberImage=new Image()
 emberImage.src=firePokemonSrc
-const ember = new Sprite({
+const ember = new Monster({
     context: c,
     position: { x: 280, y: 325 },
     image: emberImage,
     frames: { max: 4, hold: 30 },
-    animate: true
+    animate: true,
+    name:"draggle",
+    onHealthChange: (health) => updateHealthBar('#playerHealthBar', health)
+})
+
+function playButtonAnimation(button, className) {
+    button.classList.remove(className)
+    void button.offsetWidth
+    button.classList.add(className)
+}
+
+const fireballButton = document.querySelector("#fireball")
+const tackleButton = document.querySelector("#tackle")
+
+fireballButton.addEventListener("animationend", () => {
+    fireballButton.classList.remove("fireball-active")
+})
+
+tackleButton.addEventListener("animationend", () => {
+    tackleButton.classList.remove("tackle-active")
+})
+
+fireballButton.addEventListener("click", () => {
+    if (ember.isAttacking) return
+    playButtonAnimation(fireballButton, "fireball-active")
+    ember.attack({ attack: { name: "fireball", damage: 15, type: "fire" }, recipient: draggle })
+})
+
+tackleButton.addEventListener("click", () => {
+    if (ember.isAttacking) return
+    playButtonAnimation(tackleButton, "tackle-active")
+    ember.attack({ attack: { name: "tackle", damage: 10, type: "normal" }, recipient: draggle })
 })
 function animateBattle(){
     window.requestAnimationFrame(animateBattle)
@@ -190,8 +229,7 @@ function animateBattle(){
     ember.draw(canvas)
     // console.log("animating battle");
     const userInterfaceElement = document.querySelector("#userInterface")
-    userInterfaceElement.style="display:block"
-    
+    userInterfaceElement.style="display:block"    
 }
 function animate() {
     

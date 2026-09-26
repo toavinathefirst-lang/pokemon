@@ -30,6 +30,8 @@ button:hover {
   background-color: #ddd;
 }
 
+
+
 /* ---------- Conteneur du jeu ---------- */
 .game {
   display: inline-block;
@@ -88,7 +90,31 @@ button:hover {
   top: 330px;
   right: 50px;
 }
+#attacksBox button {
+  transition: background-color 0.2s ease;
+}
 
+#attacksBox button.fireball-active {
+  animation: fireGradient 0.6s ease-in-out;
+}
+
+@keyframes fireGradient {
+  0% { background: white; }
+  50% { background: linear-gradient(135deg, #ff9900, #ff3300); color: white; }
+  100% { background: white; color: black; }
+}
+
+#tackle.tackle-active {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
 .health-box h1,
 #attackType {
   font-size: 16px;

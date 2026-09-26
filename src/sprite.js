@@ -9,6 +9,7 @@ export class Sprite{
      * @param {{max:number,hold:number}} [options.frames={max:1,hold:10}]
      * @param {boolean} [options.animate=false]
      * @param {number} [options.scale=1]
+     * @param {number} options.opacity
      */
     constructor({
         context,
@@ -20,6 +21,7 @@ export class Sprite{
         // sprites,
         // animate = false,
         // rotation = 0,
+        opacity=1,
         scale = 1
     }){
         this.context=context
@@ -28,6 +30,7 @@ export class Sprite{
         this.image=image
         this.frames = { ...frames, val: 0, elapsed: 0 }
         this.animate=animate
+        this.opacity=opacity
 
         const setDimensions = () => {
             this.width=(this.image.width / this.frames.max)*scale
@@ -58,6 +61,8 @@ export class Sprite{
      * @param {HTMLCanvasElement} canvas 
      */
     draw(canvas){
+        this.context.save()
+        this.context.globalAlpha=this.opacity
         const frameWidth = this.image.width / this.frames.max
         const sx = this.frames.val * frameWidth
         this.context.drawImage(
@@ -70,7 +75,7 @@ export class Sprite{
             this.width,
             this.height
         )
-
+        this.context.restore()
         if (!this.animate) return
         
 

@@ -372,6 +372,12 @@ window.addEventListener("keydown", e => {
             keys.d.pressed = true
             break;
     }
+    window.addEventListener("keydown", e => {
+    if (e.key.toLowerCase() === "e") {
+        if (draggle.isAttacking) return
+        draggle.attack({ attack: { name: "tackle", damage: 10, type: "normal" }, recipient: ember })
+    }
+})
 })
 window.addEventListener("keyup", e => {
     switch (e.key.toLowerCase()) {

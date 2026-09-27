@@ -66,6 +66,26 @@ export class Monster extends Sprite {
     }
 
     /**
+     * @param {Monster} recipient
+     */
+    actuallyHit(recipient) {
+        const knockbackX = recipient.isEnemy ? 10 : -10
+
+        gsap.to(recipient.position, {
+            x: recipient.position.x + knockbackX,
+            yoyo: true,
+            repeat: 3,
+            duration: .08,
+        })
+        gsap.to(recipient, {
+            opacity: 0,
+            repeat: 3,
+            yoyo: true,
+            duration: .08
+        })
+    }
+
+    /**
      * Anime une charge physique vers la cible, puis lui inflige des dégâts.
      * @param {Object} options
      * @param {{name:string, damage:number, type:string}} options.attack
@@ -75,7 +95,7 @@ export class Monster extends Sprite {
         this.isAttacking = true
 
         const originalX = this.position.x
-        const goingRight = recipient.position.x > this.position.x
+        const goingRight = !this.isEnemy
         const lungeDistance = 60
         const recoilDistance = 20
 
@@ -92,18 +112,7 @@ export class Monster extends Sprite {
             x: goingRight ? originalX + lungeDistance : originalX - lungeDistance,
             duration: 0.1,
             onComplete: () => {
-                gsap.to(recipient.position, {
-                    x: recipient.position.x + 10,
-                    yoyo: true,
-                    repeat: 3,
-                    duration: .08,
-                })
-                gsap.to(recipient, {
-                    opacity: 0,
-                    repeat: 3,
-                    yoyo: true,
-                    duration: .08
-                })
+                this.actuallyHit(recipient)
                 recipient.takeDamage(attack.damage)
             }
         }).to(this.position, {

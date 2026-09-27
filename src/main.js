@@ -22,7 +22,8 @@ import { battleZoneArray } from './data/battleZone'
 
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext('2d')
-
+const fireballImage = new Image()
+fireballImage.src = fireBallSrc
 
 canvas.width = 1024
 canvas.height = 576
@@ -214,7 +215,7 @@ tackleButton.addEventListener("animationend", () => {
 fireballButton.addEventListener("click", () => {
     if (ember.isAttacking) return
     playButtonAnimation(fireballButton, "fireball-active")
-    ember.attack({ attack: { name: "fireball", damage: 15, type: "fire" }, recipient: draggle })
+    ember.attack({ attack: { name: "fireball", damage: 15, type: "fire",image:fireballImage,frames: { max: 4, hold: 6 } }, recipient: draggle })
 })
 
 tackleButton.addEventListener("click", () => {
@@ -227,6 +228,8 @@ function animateBattle(){
     backGroundBattle.draw(canvas)
     draggle.draw(canvas)
     ember.draw(canvas)
+    draggle.activeProjectiles.forEach(p => p.draw())
+    ember.activeProjectiles.forEach(p => p.draw())
     // console.log("animating battle");
     const userInterfaceElement = document.querySelector("#userInterface")
     userInterfaceElement.style="display:block"    
@@ -373,11 +376,22 @@ window.addEventListener("keydown", e => {
             break;
     }
     window.addEventListener("keydown", e => {
-    if (e.key.toLowerCase() === "e") {
-        if (draggle.isAttacking) return
-        draggle.attack({ attack: { name: "tackle", damage: 10, type: "normal" }, recipient: ember })
-    }
-})
+        if (e.key.toLowerCase() === "e") {
+            if (draggle.isAttacking) return
+            draggle.attack({ attack: { name: "tackle", damage: 10, type: "normal" }, recipient: ember })
+        }
+    })
+     window.addEventListener("keydown", e => {
+        if (e.key.toLowerCase() === "f") {
+            if (draggle.isAttacking) return
+            draggle.attack({ 
+                attack: { 
+                    name: "fireball", damage: 20, 
+                    type: "fire",image:fireballImage ,
+                    frames: { max: 4, hold: 5 }
+                }, recipient: ember })
+        }
+    })
 })
 window.addEventListener("keyup", e => {
     switch (e.key.toLowerCase()) {

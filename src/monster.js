@@ -38,6 +38,8 @@ export class Monster extends Sprite {
         this.onHealthChange = onHealthChange
         /** @type {boolean} */
         this.isAttacking = false
+        /** @type {Sprite[]} */
+        this.activeProjectiles = []
     }
 
     /**
@@ -54,7 +56,7 @@ export class Monster extends Sprite {
     /**
      * Déclenche une attaque vers un autre monstre, ignorée si une attaque est déjà en cours.
      * @param {Object} options
-     * @param {{name:string, damage:number, type:string}} options.attack
+     * @param {{name:string, damage:number, type:string, image?:HTMLImageElement, frames?:{max:number,hold:number}}} options.attack
      * @param {Monster} options.recipient
      */
     attack({ attack, recipient }) {
@@ -62,6 +64,8 @@ export class Monster extends Sprite {
 
         if (attack.name === "tackle") {
             this.tackleAnimation({ attack, recipient })
+        }else if(attack.name === "fireball"){
+            this.fireBallLaunch({attack,recipient})
         }
     }
 
@@ -119,5 +123,35 @@ export class Monster extends Sprite {
             x: originalX,
             duration: 0.2
         })
+    }
+    /**
+     * @param {Object} options
+     * @param {{name:string, damage:number, type:string, image:HTMLImageElement, frames?:{max:number,hold:number}}} options.attack
+     * @param {Monster} options.recipient
+     */
+    fireBallLaunch({attack,recipient}){
+        this.isAttacking = true
+        const projectile = new Sprite({
+            context: this.context,
+            position: { x: this.position.x, y: this.position.y },
+            image: attack.image,
+            frames: attack.frames || { max: 4, hold: 8 },
+            animate: !!attack.frames,
+            rotation: (this.isEnemy)?1:-2.2
+        })
+
+        this.activeProjectiles.push(projectile)
+        gsap.to(projectile.position,{
+            x:recipient.position.x,
+            y:recipient.position.y,
+            duration: 0.5,
+            onComplete: () => {
+                this.actuallyHit(recipient)
+                recipient.takeDamage(attack.damage)
+                this.activeProjectiles = this.activeProjectiles.filter(p => p !== projectile)
+                this.isAttacking = false
+            }
+        })
+        
     }
 }

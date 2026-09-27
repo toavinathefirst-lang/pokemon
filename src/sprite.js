@@ -20,7 +20,7 @@ export class Sprite{
         animate = false,
         // sprites,
         // animate = false,
-        // rotation = 0,
+        rotation = 0,
         opacity=1,
         scale = 1
     }){
@@ -31,6 +31,7 @@ export class Sprite{
         this.frames = { ...frames, val: 0, elapsed: 0 }
         this.animate=animate
         this.opacity=opacity
+        this.rotation=rotation
 
         const setDimensions = () => {
             this.width=(this.image.width / this.frames.max)*scale
@@ -61,7 +62,16 @@ export class Sprite{
      * @param {HTMLCanvasElement} canvas 
      */
     draw(canvas){
+        
         this.context.save()
+         if (this.rotation !== 0) {
+            const centerX = this.position.x + this.width / 2
+            const centerY = this.position.y + this.height / 2
+            this.context.translate(centerX, centerY)
+            this.context.rotate(this.rotation)
+            this.context.translate(-centerX, -centerY)
+        }
+
         this.context.globalAlpha=this.opacity
         const frameWidth = this.image.width / this.frames.max
         const sx = this.frames.val * frameWidth

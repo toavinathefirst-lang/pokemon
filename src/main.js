@@ -250,7 +250,40 @@ function enemyTurn(enemy, target, onComplete) {
     }
     enemy.attack({ attack, recipient: target, onComplete })
 }
+/**
+ * Affiche un message dans la boîte de dialogue du combat.
+ * @param {string} message
+ * @returns {void}
+ */
+function showDialogue(message) {
+    const dialogueBox = document.querySelector("#dialogueBox")
+    dialogueBox.innerHTML = message
+    dialogueBox.style.display = "block"
 
+}
+/**
+ * Vide et cache la boîte de dialogue du combat.
+ * @returns {void}
+ */
+function hideDialogue() {
+    const dialogueBox = document.querySelector("#dialogueBox")
+    dialogueBox.innerHTML = ""
+    dialogueBox.style.display = "none"
+}
+
+/**
+ * Termine le combat : anime la défaite du monstre à 0 PV, puis affiche le résultat.
+ * Les boutons restent bloqués car `battle.busy` n'est pas remis à false.
+ * @param {Monster} fainted Monstre qui n'a plus de points de vie
+ * @returns {void}
+ */
+function endBattle(fainted) {
+    battle.busy = true
+    fainted.faint(() => {
+        const result = fainted.isEnemy ? "You won!" : "You lost..."
+        showDialogue(`${fainted.name} fainted!<br>${result}`)
+    })
+}
 /**
  * Remplit #attacksBox avec un bouton par attaque du monstre.
  * Chaque bouton a pour id le nom de l'attaque et joue la classe `<nom>-active`.
@@ -294,11 +327,16 @@ function loadAttackButtons(monster, target) {
                 recipient: target,
                 onComplete: () => {
                     if (target.health <= 0) {
-                        battle.busy = false
+                        endBattle(target)
                         return
+                        
                     }
                     gsap.delayedCall(1, () => {
                         enemyTurn(target, monster, () => {
+                            if (monster.health <= 0) {
+                                endBattle(monster)
+                                return
+                            }
                             battle.busy = false
                         })
                     })
@@ -427,6 +465,7 @@ function animate() {
                                 duration:.4
                             })
                             //activate a new animation loop
+                            hideDialogue()
                             animateBattle()
                             
                         }

@@ -55,7 +55,7 @@ export class Monster extends Sprite {
      * @param {number} amount
      */
     takeDamage(amount) {
-        this.health -= amount
+        this.health = Math.max(this.health - amount, 0)
         if (this.onHealthChange) {
             this.onHealthChange(this.health)
         }
@@ -123,6 +123,28 @@ export class Monster extends Sprite {
             repeat: 3,
             yoyo: true,
             duration: .08
+        })
+    }
+    /**
+     * Anime la défaite du monstre : il s'enfonce légèrement et disparaît.
+     * Le délai laisse finir l'animation des dégâts.
+     * @param {()=>void} [onComplete] Appelée quand le monstre a disparu
+     * @returns {void}
+     */
+    faint(onComplete){
+        gsap.to(this.position,{
+            y:this.position.y+20,
+            duration:.6,
+            delay:.4
+
+        })
+        gsap.to(this,{
+            opacity: 0,
+            duration: .6,
+            delay: .4,
+            onComplete: () => {
+                if (onComplete) onComplete()
+            }
         })
     }
 
@@ -199,4 +221,5 @@ export class Monster extends Sprite {
         })
         
     }
+    
 }

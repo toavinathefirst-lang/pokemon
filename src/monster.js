@@ -1,6 +1,10 @@
 import { Sprite } from "./sprite";
 import gsap from 'gsap'
- const dialogBox =  document.querySelector('#dialogueBox');
+
+//const dialogBox =  document.querySelector('#dialogueBox');
+/**
+ * @typedef {import('./data/types').AttackData} AttackData
+ */
 export class Monster extends Sprite {
     /**
      * @param {Object} options
@@ -12,6 +16,7 @@ export class Monster extends Sprite {
      * @param {number} [options.scale=1]
      * @param {number} [options.opacity=1]
      * @param {string} options.name
+     * @param {AttackData[]} [options.attacks=[]] Attaques que ce monstre peut utiliser
      * @param {boolean} [options.isEnemy=false]
      * @param {(health:number)=>void} [options.onHealthChange]
      */
@@ -23,6 +28,7 @@ export class Monster extends Sprite {
         animate,
         scale,
         opacity,
+        attacks = [],
         name,
         isEnemy = false,
         onHealthChange
@@ -32,6 +38,8 @@ export class Monster extends Sprite {
         this.health = 100
         /** @type {string} */
         this.name = name
+        /** @type {AttackData[]} */
+        this.attacks = attacks
         /** @type {boolean} */
         this.isEnemy = isEnemy
         /** @type {(health:number)=>void|undefined} */
@@ -54,12 +62,23 @@ export class Monster extends Sprite {
     }
 
     /**
-     * Déclenche une attaque vers un autre monstre, ignorée si une attaque est déjà en cours.
-     * @param {Object} options
-     * @param {{name:string, damage:number, type:string, image?:HTMLImageElement, frames?:{max:number,hold:number}}} options.attack
-     * @param {Monster} options.recipient
+     * Choisit une attaque au hasard parmi celles du monstre.
+     * @returns {AttackData|undefined}
      */
-    attack({ attack, recipient }) {
+    randomAttack() {
+        return this.attacks[Math.floor(Math.random() * this.attacks.length)]
+    }
+
+    /**
+     * Déclenche une attaque vers un autre monstre, ignorée si une attaque est déjà en cours.
+     * L'animation jouée dépend de `attack.animation` et non du nom de l'attaque.
+     * @param {Object} options
+     * @param {AttackData} options.attack
+     * @param {Monster} options.recipient
+     * @param {()=>void} [options.onComplete] Appelée quand l'attaque est entièrement terminée
+     * @returns {void}
+     */
+    attack({ attack, recipient,onComplete }) {
         if (this.isAttacking) return
 
       
@@ -76,10 +95,13 @@ export class Monster extends Sprite {
     //             attackBox.style.display="grid"
     //         }, 1000)
     //     }
-        if (attack.name === "tackle") {
-            this.tackleAnimation({ attack, recipient /*,onComplete: finishAttack*/})
-        }else if(attack.name === "fireball"){
-            this.fireBallLaunch({attack,recipient/*,onComplete: finishAttack*/})
+        if (attack.animation === "melee") {
+            this.tackleAnimation({ attack, recipient ,onComplete})
+        }else if(attack.animation === "projectile"){
+            this.fireBallLaunch({attack,recipient,onComplete})
+        }else if (onComplete) {
+        
+            onComplete()
         }
         
     }
@@ -107,11 +129,12 @@ export class Monster extends Sprite {
     /**
      * Anime une charge physique vers la cible, puis lui inflige des dégâts.
      * @param {Object} options
-     * @param {{name:string, damage:number, type:string}} options.attack
+     * @param {AttackData} options.attack
      * @param {Monster} options.recipient
      * @param {()=>void} [options.onComplete]
+     * @returns {void}
      */
-    tackleAnimation({ attack, recipient ,/*onComplete*/}) {
+    tackleAnimation({ attack, recipient ,onComplete}) {
         this.isAttacking = true
 
         const originalX = this.position.x
@@ -122,7 +145,7 @@ export class Monster extends Sprite {
         const tl = gsap.timeline({
             onComplete: () => {
                 this.isAttacking = false
-                //if (onComplete) onComplete()
+                if (onComplete) onComplete()
             }
         })
 
@@ -142,10 +165,12 @@ export class Monster extends Sprite {
         })
     }
     /**
+     * Lance un projectile vers la cible, puis lui inflige des dégâts à l'impact.
      * @param {Object} options
-     * @param {{name:string, damage:number, type:string, image:HTMLImageElement, frames?:{max:number,hold:number}}} options.attack
+     * @param {AttackData & {image: HTMLImageElement}} options.attack
      * @param {Monster} options.recipient
      * @param {()=>void} [options.onComplete]
+     * @returns {void}
      */
     fireBallLaunch({attack,recipient,onComplete}){
         this.isAttacking = true
@@ -169,7 +194,7 @@ export class Monster extends Sprite {
                 this.activeProjectiles = this.activeProjectiles.filter(p => p !== projectile)
                 this.isAttacking = false
 
-               // if (onComplete) onComplete()
+               if (onComplete) onComplete()
             }
         })
         

@@ -1,4 +1,3 @@
-//mon code
 export class Player {
     /**
      * @param {Object} options
@@ -8,14 +7,25 @@ export class Player {
      * @param {string} [options.direction='down']
      */
     constructor({ context, images, direction = 'down' }) {
+        /** @type {CanvasRenderingContext2D} */
         this.context = context
+        /** @type {Object.<string, HTMLImageElement>} */
         this.images = images
+        /** @type {string} */
         this.direction = direction
+        /** @type {HTMLImageElement} */
         this.image = this.images[this.direction]
+        /** @type {{max:number, hold:number, val:number, elapsed:number}} */
         this.frames = { max: 4, hold: 8, val: 0, elapsed: 0 }
+        /** @type {boolean} */
         this.moving=false
     }
 
+    /**
+     * Change la direction du joueur, son sprite, et le met en mouvement.
+     * @param {'up'|'down'|'left'|'right'} direction
+     * @returns {void}
+     */
     setDirection(direction) {
         this.moving=true
         this.direction = direction
@@ -24,6 +34,7 @@ export class Player {
 
     /**
      * @param {HTMLCanvasElement} canvas
+     * @returns {void}
      */
     draw(canvas) {
         const frameWidth = this.image.width / this.frames.max
@@ -44,6 +55,7 @@ export class Player {
     /**
      * Retourne la boîte de collision du joueur, toujours centrée sur le canvas.
      * @param {HTMLCanvasElement} canvas
+     * @returns {{position:{x:number,y:number}, width:number, height:number}}
      */
     getBox(canvas) {
         const fullWidth = this.image.width / 4
@@ -63,6 +75,10 @@ export class Player {
             height
         }
     }
+    /**
+     * Fait avancer l'animation de marche, ou remet la première frame si le joueur est à l'arrêt.
+     * @returns {void}
+     */
     moveAnimation(){
         if(!this.moving){
             this.frames.val=0

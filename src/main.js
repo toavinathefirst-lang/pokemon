@@ -8,9 +8,6 @@ import playerLeft from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/pl
 import playerRight from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/playerRight.png"
 import foreGroundObject from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Tiled/foreground object.png"
 import backGroundBattleImage from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/battleBackground.png"
-import draggleImageSrc from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/draggleSprite.png"
-import firePokemonSrc from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/embySprite.png"
-import fireBallSrc from "./assets/chrisCourseAssets/ChrisCoursesPokemon/Images/fireball.png"
 
 import { Monster } from './monster'
 import { Sprite } from './sprite';
@@ -19,11 +16,10 @@ import { Player } from './player'
 
 import { collisionMap } from './data/collisions'
 import { battleZoneArray } from './data/battleZone'
+import { monsters } from './data/monsters'
 
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext('2d')
-const fireballImage = new Image()
-fireballImage.src = fireBallSrc
 
 canvas.width = 1024
 canvas.height = 576
@@ -117,6 +113,10 @@ const player = new Player({
 
 const movables = [background, ...boundaries, foreground, ...battleZone]
 
+/**
+ * Compte les images chargées et lance la boucle d'animation quand elles le sont toutes.
+ * @returns {void}
+ */
 function tryDraw() {
     imagesLoaded++;
     if (imagesLoaded === totalImages) {
@@ -145,6 +145,13 @@ const keys = {
     d: { pressed: false }
 }
 
+/**
+ * Teste si deux rectangles se chevauchent.
+ * @param {Object} options
+ * @param {{position:{x:number,y:number}, width:number, height:number}} options.rect1
+ * @param {{position:{x:number,y:number}, width:number, height:number}} options.rect2
+ * @returns {boolean}
+ */
 function rectangularCollision({ rect1, rect2 }) {
     return (
         rect1.position.x < rect2.position.x + rect2.width &&
@@ -154,7 +161,8 @@ function rectangularCollision({ rect1, rect2 }) {
     )
 }
 const battle={
-    initiated:false
+    initiated:false,
+    busy:false
 }
 const battleBackgroundImage = new Image()
 battleBackgroundImage.src=backGroundBattleImage;
@@ -166,63 +174,146 @@ const backGroundBattle= new Sprite({
     },
     image:battleBackgroundImage
 })
+
+/**
+ * Anime la largeur d'une barre de vie.
+ * @param {string} selector Sélecteur CSS de la barre
+ * @param {number} health Points de vie restants (0 à 100)
+ * @returns {void}
+ */
 function updateHealthBar(selector, health) {
     gsap.to(selector, {
         width: Math.max(health, 0) + '%'
     })
 }
-const draggleImage=new Image()
-draggleImage.src = draggleImageSrc
-const draggle = new Monster({
-    context: c,
+
+/**
+ * Crée un Monster à partir de son entrée dans le catalogue `monsters`.
+ * @param {keyof typeof monsters} key Clé du monstre dans `monsters`
+ * @param {Object} options
+ * @param {{x:number,y:number}} options.position
+ * @param {boolean} [options.isEnemy=false]
+ * @param {string} options.healthBarSelector Sélecteur CSS de sa barre de vie
+ * @returns {Monster}
+ */
+function createMonster(key, { position, isEnemy = false, healthBarSelector }) {
+    const data = monsters[key]
+    const monsterImage = new Image()
+    monsterImage.src = data.imageSrc
+
+    return new Monster({
+        context: c,
+        position,
+        image: monsterImage,
+        frames: data.frames,
+        animate: true,
+        name: data.name,
+        attacks: data.attacks,
+        isEnemy,
+        onHealthChange: (health) => updateHealthBar(healthBarSelector, health)
+    })
+}
+
+const draggle = createMonster("draggle", {
     position: { x: 800, y: 100 },
-    image: draggleImage,
-    frames: { max: 4, hold: 30 },
-    animate: true,
-    name:"draggle",
-    isEnemy:true,
-    onHealthChange: (health) => updateHealthBar('#enemyHealthBar', health)
+    isEnemy: true,
+    healthBarSelector: '#enemyHealthBar'
 })
-const emberImage=new Image()
-emberImage.src=firePokemonSrc
-const ember = new Monster({
-    context: c,
+const ember = createMonster("emby", {
     position: { x: 280, y: 325 },
-    image: emberImage,
-    frames: { max: 4, hold: 30 },
-    animate: true,
-    name:"draggle",
-    onHealthChange: (health) => updateHealthBar('#playerHealthBar', health)
+    healthBarSelector: '#playerHealthBar'
 })
 
+/**
+ * Relance l'animation CSS d'un bouton.
+ * @param {HTMLElement} button
+ * @param {string} className Classe CSS qui déclenche l'animation
+ * @returns {void}
+ */
 function playButtonAnimation(button, className) {
     button.classList.remove(className)
     void button.offsetWidth
     button.classList.add(className)
 }
+/**
+ * Joue le tour de l'ennemi avec une de ses attaques choisie au hasard.
+ * @param {Monster} enemy Monstre qui attaque
+ * @param {Monster} target Monstre du joueur
+ * @param {()=>void} [onComplete] Appelée quand l'attaque de l'ennemi est terminée
+ * @returns {void}
+ */
+function enemyTurn(enemy, target, onComplete) {
+    const attack = enemy.randomAttack()
+    if (enemy.health <= 0 || !attack) {
+        if (onComplete) onComplete()
+        return
+    }
+    enemy.attack({ attack, recipient: target, onComplete })
+}
 
-const fireballButton = document.querySelector("#fireball")
-const tackleButton = document.querySelector("#tackle")
+/**
+ * Remplit #attacksBox avec un bouton par attaque du monstre.
+ * Chaque bouton a pour id le nom de l'attaque et joue la classe `<nom>-active`.
+ * @param {Monster} monster Monstre du joueur
+ * @param {Monster} target Monstre adverse
+ * @returns {void}
+ */
+function loadAttackButtons(monster, target) {
+    const attacksBox = document.querySelector("#attacksBox")
+    const attackTypeLabel = document.querySelector("#attackType")
+    attacksBox.innerHTML = ""
 
-fireballButton.addEventListener("animationend", () => {
-    fireballButton.classList.remove("fireball-active")
-})
+    monster.attacks.forEach(attack => {
+        const button = document.createElement("button")
+        button.id = attack.name
+        button.textContent = attack.name
 
-tackleButton.addEventListener("animationend", () => {
-    tackleButton.classList.remove("tackle-active")
-})
+        button.addEventListener("animationend", () => {
+            button.classList.remove(`${attack.name}-active`)
+        })
 
-fireballButton.addEventListener("click", () => {
-    if (ember.isAttacking) return
-    playButtonAnimation(fireballButton, "fireball-active")
-    ember.attack({ attack: { name: "fireball", damage: 15, type: "fire",image:fireballImage,frames: { max: 4, hold: 6 } }, recipient: draggle })
-})
+        // button.addEventListener("click", () => {
+        //     if (monster.isAttacking) return
+        //     playButtonAnimation(button, `${attack.name}-active`)
+        //     monster.attack({ attack, recipient: target })
+        // })
 
-tackleButton.addEventListener("click", () => {
-    if (ember.isAttacking) return
-    playButtonAnimation(tackleButton, "tackle-active")
-    ember.attack({ attack: { name: "tackle", damage: 10, type: "normal" }, recipient: draggle })
-})
+        button.addEventListener("mouseenter", () => {
+            attackTypeLabel.textContent = attack.type
+        })
+
+        attacksBox.append(button)
+
+        button.addEventListener("click", () => {
+            if (battle.busy || monster.isAttacking) return
+            battle.busy = true
+
+            playButtonAnimation(button, `${attack.name}-active`)
+            monster.attack({
+                attack,
+                recipient: target,
+                onComplete: () => {
+                    if (target.health <= 0) {
+                        battle.busy = false
+                        return
+                    }
+                    gsap.delayedCall(1, () => {
+                        enemyTurn(target, monster, () => {
+                            battle.busy = false
+                        })
+                    })
+                }
+            })
+        })
+    })
+}
+
+loadAttackButtons(ember, draggle)
+
+/**
+ * Boucle d'animation du combat.
+ * @returns {void}
+ */
 function animateBattle(){
     window.requestAnimationFrame(animateBattle)
     backGroundBattle.draw(canvas)
@@ -234,6 +325,11 @@ function animateBattle(){
     const userInterfaceElement = document.querySelector("#userInterface")
     userInterfaceElement.style="display:block"    
 }
+
+/**
+ * Boucle d'animation de la carte : déplacement, collisions et déclenchement des combats.
+ * @returns {void}
+ */
 function animate() {
     
    const  animationId = window.requestAnimationFrame(animate)
@@ -375,24 +471,14 @@ window.addEventListener("keydown", e => {
             keys.d.pressed = true
             break;
     }
-    window.addEventListener("keydown", e => {
-        if (e.key.toLowerCase() === "e") {
-            if (draggle.isAttacking) return
-            draggle.attack({ attack: { name: "tackle", damage: 10, type: "normal" }, recipient: ember })
-        }
-    })
-     window.addEventListener("keydown", e => {
-        if (e.key.toLowerCase() === "f") {
-            if (draggle.isAttacking) return
-            draggle.attack({ 
-                attack: { 
-                    name: "fireball", damage: 20, 
-                    type: "fire",image:fireballImage ,
-                    frames: { max: 4, hold: 5 }
-                }, recipient: ember })
-        }
-    })
 })
+// window.addEventListener("keydown", e => {
+//     if (e.key.toLowerCase() === "e") {
+//         if (draggle.isAttacking) return
+//         const attack = draggle.randomAttack()
+//         if (attack) draggle.attack({ attack, recipient: ember })
+//     }
+// })
 window.addEventListener("keyup", e => {
     switch (e.key.toLowerCase()) {
         case "z":

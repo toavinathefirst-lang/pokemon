@@ -160,6 +160,8 @@ function rectangularCollision({ rect1, rect2 }) {
         rect1.position.y + rect1.height > rect2.position.y
     )
 }
+/** @type {number} */
+let battleAnimationId
 const battle={
     initiated:false,
     busy:false
@@ -282,6 +284,40 @@ function endBattle(fainted) {
     fainted.faint(() => {
         const result = fainted.isEnemy ? "You won!" : "You lost..."
         showDialogue(`${fainted.name} fainted!<br>${result}`)
+        gsap.delayedCall(1.5, returnToMap)
+    })
+}
+/**
+ * Remet les monstres et l'interface du combat dans leur état initial.
+ * @returns {void}
+ */
+function resetBattle() {
+    battle.busy = false
+    draggle.reset()
+    ember.reset()
+    hideDialogue()
+    document.querySelector("#attackType").textContent = "Attack Type"
+    document.querySelector("#userInterface").style.display = "none"
+}
+
+/**
+ * Transition inverse : fondu au noir, arrêt du combat, retour à la boucle de la carte.
+ * @returns {void}
+ */
+function returnToMap() {
+    gsap.to('#overlappingDiv', {
+        opacity: 1,
+        duration: .4,
+        onComplete() {
+            window.cancelAnimationFrame(battleAnimationId)
+            resetBattle()
+            battle.initiated = false
+            animate()
+            gsap.to('#overlappingDiv', {
+                opacity: 0,
+                duration: .4
+            })
+        }
     })
 }
 /**
@@ -353,7 +389,7 @@ loadAttackButtons(ember, draggle)
  * @returns {void}
  */
 function animateBattle(){
-    window.requestAnimationFrame(animateBattle)
+    battleAnimationId =window.requestAnimationFrame(animateBattle)
     backGroundBattle.draw(canvas)
     draggle.draw(canvas)
     ember.draw(canvas)

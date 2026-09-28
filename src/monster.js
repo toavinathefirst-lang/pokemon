@@ -34,6 +34,8 @@ export class Monster extends Sprite {
         onHealthChange
     }) {
         super({ context, position, image, frames, animate, scale, opacity })
+         /** @type {{x:number,y:number}} */
+        this.initialPosition = { x: position.x, y: position.y }
         /** @type {number} */
         this.health = 100
         /** @type {string} */
@@ -56,6 +58,21 @@ export class Monster extends Sprite {
      */
     takeDamage(amount) {
         this.health = Math.max(this.health - amount, 0)
+        if (this.onHealthChange) {
+            this.onHealthChange(this.health)
+        }
+    }
+        /**
+     * Remet le monstre dans son état de début de combat.
+     * @returns {void}
+     */
+    reset() {
+        this.health = 100
+        this.opacity = 1
+        this.position.x = this.initialPosition.x
+        this.position.y = this.initialPosition.y
+        this.isAttacking = false
+        this.activeProjectiles = []
         if (this.onHealthChange) {
             this.onHealthChange(this.health)
         }
